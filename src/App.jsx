@@ -8,12 +8,31 @@ function Square({ value, onSquareClick }) {
   );
 }
 
-function Board({ squares, onClick }) {
+function Board({ xIsNext, squares, onPlay }) {
+  const handleClick = i => {
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    const nextSquares = squares.slice();
+    nextSquares[i] = xIsNext ? 'X' : 'O';
+    onPlay(nextSquares);
+  };
+
   const renderSquare = i => (
-    <Square value={squares[i]} onSquareClick={() => onClick(i)} />
+    <Square value={squares[i]} onSquareClick={() => handleClick(i)} />
   );
+
+  const winner = calculateWinner(squares);
+  let status;
+  if (winner) {
+    status = 'Winner: ' + winner;
+  } else {
+    status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+  }
+
   return (
     <>
+      <div className="status">{status}</div>
       <div className="board-row">
         {renderSquare(0)}
         {renderSquare(1)}
@@ -39,20 +58,14 @@ export default function Game() {
   const xIsNext = stepNumber % 2 === 0;
   const currentSquares = history[stepNumber].slice();
 
-  const handleClick = i => {
-    if (calculateWinner(currentSquares) || currentSquares[i]) {
-      return;
-    }
-    currentSquares[i] = xIsNext ? 'X' : 'O';
-    setHistory([...history.slice(), currentSquares]);
+  const handlePlay = squares => {
+    setHistory([...history.slice(), squares]);
     setStepNumber(stepNumber + 1);
   };
 
   const jumpTo = step => {
     setStepNumber(step);
   };
-
-  const winner = calculateWinner(currentSquares);
 
   const moves = history.map((squares, move) => {
     const desc = move ? 'Go to move #' + move : 'Go to game start';
@@ -63,20 +76,12 @@ export default function Game() {
     );
   });
 
-  let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (xIsNext ? 'X' : 'O');
-  }
-
   return (
     <div className="game">
       <div className="game-board">
-        <Board squares={currentSquares} onClick={i => handleClick(i)} />
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
       </div>
       <div className="game-info">
-        <div>{status}</div>
         <ol>{moves}</ol>
       </div>
     </div>
